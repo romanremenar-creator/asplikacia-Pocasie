@@ -26,10 +26,10 @@ jobs:
       - name: Nastavenie Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
       - name: Instalacia balickov
-        run: npm ci
+        run: npm install
       - name: Vytvorenie Buildu
         run: npm run build
       - name: Nastavenie Pages
