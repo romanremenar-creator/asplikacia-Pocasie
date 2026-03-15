@@ -7,8 +7,9 @@ const CustomXAxisTick = ({ x, y, payload, activeTab, isMobile }) => {
   if (!payload || !payload.value) return null;
   const date = new Date(payload.value);
   if (activeTab === "dnes") {
+    // Na mobiloch (aj na šírku) používame zjednodušenú hodinu
     const timeStr = isMobile 
-      ? date.getHours() // Simple number for mobile
+      ? date.getHours() // Iba číslo (napr. 8)
       : date.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" });
     
     return (
@@ -18,7 +19,7 @@ const CustomXAxisTick = ({ x, y, payload, activeTab, isMobile }) => {
     );
   } else {
     const days = ["Ned", "Pon", "Ut", "Str", "Štvr", "Pia", "Sob"];
-    // For 10-day forecast, show only day number to save space
+    // Pre 10-dňovú predpoveď zobrazujeme iba číslo dňa
     const dateStr = activeTab === "10dni" 
       ? date.getDate() 
       : date.toLocaleDateString("sk-SK", { day: "2-digit", month: "2-digit" });
@@ -34,7 +35,10 @@ const CustomXAxisTick = ({ x, y, payload, activeTab, isMobile }) => {
 
 const CustomTooltip = ({ active, payload, label, firstPointTime, labelFormatter, formatter }) => {
   if (active && payload && payload.length) {
-    if (label === firstPointTime && window.innerWidth < 600) {
+    // Schovanie tooltipu na úplnom začiatku pre malé obrazovky (šírka < 900px alebo výška < 500px)
+    const isSmallWidth = window.innerWidth < 900;
+    const isSmallHeight = window.innerHeight < 500;
+    if (label === firstPointTime && (isSmallWidth || isSmallHeight)) {
       return null;
     }
 
@@ -51,7 +55,7 @@ const CustomTooltip = ({ active, payload, label, firstPointTime, labelFormatter,
           {labelFormatter(label)}
         </p>
         {payload.map((item, index) => (
-          <p key={index} style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: item.color || '#ff8c42' }}>
+          <p key={index} style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#ff8c42' }}>
             {item.name}: {item.value}{item.unit || (formatter && typeof formatter === 'function' ? formatter(item.value)[0].replace(/[0-9.]/g, '') : '°C')}
           </p>
         ))}
@@ -62,10 +66,11 @@ const CustomTooltip = ({ active, payload, label, firstPointTime, labelFormatter,
 };
 
 export const WeatherCharts = ({ hourlyData, activeTab }) => {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
+  // Hraničná hodnota 900px pokryje aj mobily na šírku (landscape)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 600);
+    const handleResize = () => setIsMobile(window.innerWidth < 900);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -78,7 +83,7 @@ export const WeatherCharts = ({ hourlyData, activeTab }) => {
   
   const chartTicks = activeTab === "dnes" 
     ? (isMobile 
-        ? hourlyData.filter(d => new Date(d.time).getHours() % 4 === 0).map(d => d.time) // Every 4h on mobile
+        ? hourlyData.filter(d => new Date(d.time).getHours() % 4 === 0).map(d => d.time) // Každé 4h na mobiloch
         : undefined) 
     : hourlyData.filter(d => new Date(d.time).getHours() === 12).map(d => d.time);
 
@@ -166,10 +171,6 @@ export const WeatherCharts = ({ hourlyData, activeTab }) => {
                 interval={0}
               />
               <YAxis stroke="var(--text-secondary)" fontSize={12} tickFormatter={(value) => `${value} mm`} />
-              <Tooltip 
-                content={<CustomTooltip firstPointTime={firstPointTime} labelFormatter={tooltipLabelFormatter} formatter={(v) => [`${v} mm`]} />}
-                cursor={{fill: 'rgba(255,255,255,0.05)'}} 
-              />
               <Bar dataKey="precip" radius={[4, 4, 0, 0]} name="Úhrn Zrážok">
                 {hourlyData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.snowfall > 0 ? '#cccccc' : 'var(--chart-precip)'} />
@@ -201,10 +202,6 @@ export const WeatherCharts = ({ hourlyData, activeTab }) => {
                 interval={0}
               />
               <YAxis stroke="var(--text-secondary)" fontSize={12} domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-              <Tooltip 
-                content={<CustomTooltip firstPointTime={firstPointTime} labelFormatter={tooltipLabelFormatter} formatter={(v) => [`${v}%`]} />}
-                cursor={{fill: 'rgba(255,255,255,0.05)'}} 
-              />
               <Bar dataKey="cloudCover" fill="var(--chart-cloud)" radius={[2, 2, 0, 0]} name="Oblačnosť" />
             </BarChart>
           </ResponsiveContainer>
