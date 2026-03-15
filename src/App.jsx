@@ -66,7 +66,7 @@ function App() {
               relative_humidity_2m: data.current?.relative_humidity_2m || data.hourly?.relative_humidity_2m[0],
             }} 
           />
-          <WeatherCharts hourlyData={hourlyDataPrepared} />
+          <WeatherCharts hourlyData={hourlyDataPrepared} activeTab={activeTab} />
         </>
       ) : null}
     </div>

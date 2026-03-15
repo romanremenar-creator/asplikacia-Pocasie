@@ -114,8 +114,9 @@ h1 {
   background: #2a2a40;
   border: 1px solid var(--glass-border);
   border-radius: 12px;
-  overflow: hidden;
-  z-index: 10;
+  overflow-y: auto;
+  max-height: 300px;
+  z-index: 100;
   box-shadow: 0 10px 40px rgba(0,0,0,0.5);
 }
 
@@ -125,6 +126,10 @@ h1 {
   display: flex;
   justify-content: space-between;
   transition: background 0.2s;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.search-item:last-child {
+  border-bottom: none;
 }
 .search-item:hover {
   background: rgba(255,255,255,0.1);
@@ -134,11 +139,22 @@ h1 {
   flex-direction: column;
 }
 .search-item-name {
-  font-size: 600;
+  font-weight: 600;
 }
 .search-item-sub {
   font-size: 0.8rem;
   color: var(--text-secondary);
+}
+
+/* Chart Ticks */
+.chart-tick-primary {
+  fill: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.chart-tick-secondary {
+  fill: var(--text-secondary);
+  font-size: 11px;
 }
 
 .quick-locations {
@@ -329,5 +345,29 @@ h1 {
   .tab-btn {
     padding: 0.4rem 0.8rem;
     font-size: 1rem;
+  }
+  
+  /* Mobile Search Result Tuning */
+  .search-results {
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    top: 5.5rem;
+    max-height: 200px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.7);
+  }
+  .search-item {
+    padding: 0.6rem 1rem;
+  }
+  .search-item-name {
+    font-size: 0.9rem;
+  }
+  
+  /* Mobile Chart Tick Scaling */
+  .chart-tick-primary {
+    font-size: 9px;
+  }
+  .chart-tick-secondary {
+    font-size: 8px;
   }
 }

@@ -1,14 +1,84 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine
 } from 'recharts';
 
-export const WeatherCharts = ({ hourlyData }) => {
+const CustomXAxisTick = ({ x, y, payload, activeTab, isMobile }) => {
+  if (!payload || !payload.value) return null;
+  const date = new Date(payload.value);
+  if (activeTab === "dnes") {
+    const timeStr = isMobile 
+      ? date.getHours() // Simple number for mobile
+      : date.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" });
+    
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text x={0} y={0} dy={16} textAnchor="middle" className="chart-tick-primary">{timeStr}</text>
+      </g>
+    );
+  } else {
+    const days = ["Ned", "Pon", "Ut", "Str", "Štvr", "Pia", "Sob"];
+    const dateStr = date.toLocaleDateString("sk-SK", { day: "2-digit", month: "2-digit" });
+    const dayStr = days[date.getDay()];
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text x={0} y={0} dy={16} textAnchor="middle" className="chart-tick-primary">{dateStr}</text>
+        <text x={0} y={0} dy={32} textAnchor="middle" className="chart-tick-secondary">{dayStr}</text>
+      </g>
+    );
+  }
+};
+
+const CustomTooltip = ({ active, payload, label, firstPointTime, labelFormatter, formatter }) => {
+  if (active && payload && payload.length) {
+    if (label === firstPointTime && window.innerWidth < 600) {
+      return null;
+    }
+
+    return (
+      <div className="glass" style={{ 
+        padding: '10px', 
+        backgroundColor: 'rgba(30, 30, 47, 0.9)', 
+        borderColor: 'rgba(255, 255, 255, 0.1)', 
+        borderRadius: '8px',
+        color: '#fff',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+      }}>
+        <p style={{ margin: 0, fontSize: '13px', marginBottom: '5px', color: '#fff' }}>
+          {labelFormatter(label)}
+        </p>
+        {payload.map((item, index) => (
+          <p key={index} style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: item.color || '#ff8c42' }}>
+            {item.name}: {item.value}{item.unit || (formatter && typeof formatter === 'function' ? formatter(item.value)[0].replace(/[0-9.]/g, '') : '°C')}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+export const WeatherCharts = ({ hourlyData, activeTab }) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 600);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   if (!hourlyData || hourlyData.length === 0) return null;
 
   const dataMax = Math.max(...hourlyData.map(i => i.temp));
   const dataMin = Math.min(...hourlyData.map(i => i.temp));
+  const firstPointTime = hourlyData[0].time;
   
+  const chartTicks = activeTab === "dnes" 
+    ? (isMobile 
+        ? hourlyData.filter(d => new Date(d.time).getHours() % 4 === 0).map(d => d.time) // Every 4h on mobile
+        : undefined) 
+    : hourlyData.filter(d => new Date(d.time).getHours() === 12).map(d => d.time);
+
   let off = 1;
   if (dataMax <= 0) {
     off = 0;
@@ -18,6 +88,15 @@ export const WeatherCharts = ({ hourlyData }) => {
     off = dataMax / (dataMax - dataMin);
   }
 
+  const tooltipLabelFormatter = (label) => {
+    if (!label) return '';
+    const date = new Date(label);
+    const ts = date.toLocaleTimeString('sk-SK', {hour:'2-digit', minute:'2-digit'});
+    const ds = ['Ned','Pon','Ut','Str','Štvr','Pia','Sob'][date.getDay()];
+    const dateStr = date.toLocaleDateString('sk-SK', {day:'2-digit',month:'2-digit'});
+    return `Čas: ${ts} (${ds} ${dateStr})`;
+  };
+
   return (
     <div className="charts-container">
       { /* Temp */ }
@@ -25,7 +104,7 @@ export const WeatherCharts = ({ hourlyData }) => {
         <h3 className="chart-header">Vývoj teploty</h3>
         <div style={{width: '100%', height: 300}}>
           <ResponsiveContainer>
-            <AreaChart data={hourlyData} margin={{ top: 10,right: 10, left: -20, bottom: 0 }}>
+            <AreaChart data={hourlyData} margin={{ top: 10,right: 10, left: -20, bottom: 30 }}>
               <defs>
                 <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="var(--chart-temp-day)" stopOpacity={0.3} />
@@ -40,11 +119,22 @@ export const WeatherCharts = ({ hourlyData }) => {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
               {hourlyData.filter(d => d.isNewDay).map((d, index) => (
-                <ReferenceLine key={'ref-'+index} x={d.timeLabel} stroke="rgba(255,255,255,0.1)" strokeDasharray="3 3" />
+                <ReferenceLine key={'ref-'+index} x={d.time} stroke="rgba(255,255,255,0.1)" strokeDasharray="3 3" />
               ))}
-              <XAxis dataKey="timeLabel" stroke="var(--text-secondary)" fontSize={12} tickMargin={10} minTickGap={30} />
+              <XAxis 
+                dataKey="time" 
+                ticks={chartTicks} 
+                tick={<CustomXAxisTick activeTab={activeTab} isMobile={isMobile} />} 
+                stroke="var(--text-secondary)" 
+                fontSize={12} 
+                tickMargin={10} 
+                minTickGap={0} 
+                interval={0}
+              />
               <YAxis stroke="var(--text-secondary)" fontSize={12} tickFormatter={(value) => `${value}°`} />
-              <Tooltip contentStyle={{ backgroundColor: 'rgba(30, 30, 47, 0.9)', borderColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '8px' ,color: '#fff' }} itemStyle={{ color: '#ff8c42' }} labelFormatter={(label, payload) => payload && payload.length > 0 && payload[0].payload.time ? `Cas: ${new Date(payload[0].payload.time).toLocaleTimeString('sk-SK', {hour: '2-digit', minute:'2-digit'})} (${label})` : `Čas: ${label}`} formatter={(value) => [`${value}°C`, 'Teplota']} />
+              <Tooltip 
+                content={<CustomTooltip firstPointTime={firstPointTime} labelFormatter={tooltipLabelFormatter} formatter={(v) => [`${v}°C`]} />}
+              />
               <Legend verticalAlign="top" height={36} />
               <Area type="monotone" dataKey="temp" stroke="url(#splitColorStroke)" strokeWidth={2} fillOpacity={1} fill="url(#splitColor)" name="Teplota" />
             </AreaChart>
@@ -57,19 +147,31 @@ export const WeatherCharts = ({ hourlyData }) => {
         <h3 className="chart-header">Zrážkový model</h3>
         <div style={{width: '100%', height: 250}}>
           <ResponsiveContainer>
-            <BarChart data={hourlyData} margin={{ top: 10,right: 10, left: -20, bottom: 0 }}>
+            <BarChart data={hourlyData} margin={{ top: 10,right: 10, left: -20, bottom: 30 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
               {hourlyData.filter(d => d.isNewDay).map((d, index) => (
-                <ReferenceLine key={'ref-'+index} x={d.timeLabel} stroke="rgba(255,255,255,0.1)" strokeDasharray="3 3" />
+                <ReferenceLine key={'ref-'+index} x={d.time} stroke="rgba(255,255,255,0.1)" strokeDasharray="3 3" />
               ))}
-              <XAxis dataKey="timeLabel" stroke="var(--text-secondary)" fontSize={12} tickMargin={10} minTickGap={30} />
+              <XAxis 
+                dataKey="time" 
+                ticks={chartTicks} 
+                tick={<CustomXAxisTick activeTab={activeTab} isMobile={isMobile} />} 
+                stroke="var(--text-secondary)" 
+                fontSize={12} 
+                tickMargin={10} 
+                minTickGap={0} 
+                interval={0}
+              />
               <YAxis stroke="var(--text-secondary)" fontSize={12} tickFormatter={(value) => `${value} mm`} />
-              <Tooltip contentStyle={{ backgroundColor: 'rgba(30, 30, 47, 0.9)', borderColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '8px' ,color: '#fff' }} itemStyle={{ color: '#ff8c42' }} labelFormatter={(label, payload) => payload && payload.length > 0 && payload[0].payload.time ? `Cas: ${new Date(payload[0].payload.time).toLocaleTimeString('sk-SK', {hour: '2-digit', minute:'2-digit'})} (${label})` : `Čas: ${label}`} formatter={(value) => [`${value} mm`, 'Zrážky']} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
+              <Tooltip 
+                content={<CustomTooltip firstPointTime={firstPointTime} labelFormatter={tooltipLabelFormatter} formatter={(v) => [`${v} mm`]} />}
+                cursor={{fill: 'rgba(255,255,255,0.05)'}} 
+              />
               <Bar dataKey="precip" radius={[4, 4, 0, 0]} name="Úhrn Zrážok">
-  {hourlyData.map((entry, index) => (
-    <Cell key={`cell-${index}`} fill={entry.snowfall > 0 ? '#cccccc' : 'var(--chart-precip)'} />
-  ))}
-</Bar>
+                {hourlyData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.snowfall > 0 ? '#cccccc' : 'var(--chart-precip)'} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -80,14 +182,26 @@ export const WeatherCharts = ({ hourlyData }) => {
         <h3 className="chart-header">Oblačnosť</h3>
         <div style={{width: '100%', height: 200}}>
           <ResponsiveContainer>
-            <BarChart data={hourlyData} margin={{ top: 10,right: 10, left: -20, bottom: 0 }}>
+            <BarChart data={hourlyData} margin={{ top: 10,right: 10, left: -20, bottom: 30 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
               {hourlyData.filter(d => d.isNewDay).map((d, index) => (
-                <ReferenceLine key={'ref-'+index} x={d.timeLabel} stroke="rgba(255,255,255,0.1)" strokeDasharray="3 3" />
+                <ReferenceLine key={'ref-'+index} x={d.time} stroke="rgba(255,255,255,0.1)" strokeDasharray="3 3" />
               ))}
-              <XAxis dataKey="timeLabel" stroke="var(--text-secondary)" fontSize={12} tickMargin={10} minTickGap={30} />
+              <XAxis 
+                dataKey="time" 
+                ticks={chartTicks} 
+                tick={<CustomXAxisTick activeTab={activeTab} isMobile={isMobile} />} 
+                stroke="var(--text-secondary)" 
+                fontSize={12} 
+                tickMargin={10} 
+                minTickGap={0} 
+                interval={0}
+              />
               <YAxis stroke="var(--text-secondary)" fontSize={12} domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-              <Tooltip contentStyle={{ backgroundColor: 'rgba(30, 30, 47, 0.9)', borderColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '8px' ,color: '#fff' }} itemStyle={{ color: '#ff8c42' }} labelFormatter={(label) => `Čas: ${label}`} formatter={(value) => [`${value}%`, 'Oblačnosť']} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
+              <Tooltip 
+                content={<CustomTooltip firstPointTime={firstPointTime} labelFormatter={tooltipLabelFormatter} formatter={(v) => [`${v}%`]} />}
+                cursor={{fill: 'rgba(255,255,255,0.05)'}} 
+              />
               <Bar dataKey="cloudCover" fill="var(--chart-cloud)" radius={[2, 2, 0, 0]} name="Oblačnosť" />
             </BarChart>
           </ResponsiveContainer>
