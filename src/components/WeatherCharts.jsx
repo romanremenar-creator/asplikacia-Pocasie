@@ -18,7 +18,10 @@ const CustomXAxisTick = ({ x, y, payload, activeTab, isMobile }) => {
     );
   } else {
     const days = ["Ned", "Pon", "Ut", "Str", "Štvr", "Pia", "Sob"];
-    const dateStr = date.toLocaleDateString("sk-SK", { day: "2-digit", month: "2-digit" });
+    // For 10-day forecast, show only day number to save space
+    const dateStr = activeTab === "10dni" 
+      ? date.getDate() 
+      : date.toLocaleDateString("sk-SK", { day: "2-digit", month: "2-digit" });
     const dayStr = days[date.getDay()];
     return (
       <g transform={`translate(${x},${y})`}>
