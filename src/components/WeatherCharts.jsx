@@ -112,7 +112,7 @@ export const WeatherCharts = ({ hourlyData, activeTab }) => {
         <h3 className="chart-header">Vývoj teploty</h3>
         <div style={{width: '100%', height: 300}}>
           <ResponsiveContainer>
-            <AreaChart data={hourlyData} margin={{ top: 10,right: 10, left: -20, bottom: 30 }}>
+            <AreaChart data={hourlyData} margin={{ top: 10,right: 10, left: 0, bottom: 30 }}>
               <defs>
                 <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="var(--chart-temp-day)" stopOpacity={0.3} />
@@ -170,7 +170,13 @@ export const WeatherCharts = ({ hourlyData, activeTab }) => {
                 minTickGap={0} 
                 interval={0}
               />
-              <YAxis stroke="var(--text-secondary)" fontSize={12} tickFormatter={(value) => `${value} mm`} />
+              <YAxis 
+                stroke="var(--text-secondary)" 
+                fontSize={12} 
+                tickFormatter={(value) => `${value} mm`} 
+                allowDecimals={false}
+                domain={[0, (dataMax) => Math.max(1, Math.ceil(dataMax))]}
+              />
               <Bar dataKey="precip" radius={[4, 4, 0, 0]} name="Úhrn Zrážok">
                 {hourlyData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.snowfall > 0 ? '#cccccc' : 'var(--chart-precip)'} />
