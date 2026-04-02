@@ -1,6 +1,12 @@
 import React from 'react';
 import { Cloud, Droplets, Wind, Thermometer, Sun } from 'lucide-react';
 
+const windDirLabel = (deg) => {
+  if (deg === undefined || deg === null) return '';
+  const dirs = ['S', 'SSV', 'SV', 'VSV', 'V', 'VJV', 'JV', 'JJV', 'J', 'JJZ', 'JZ', 'ZJZ', 'Z', 'ZSZ', 'SZ', 'SSZ'];
+  return dirs[Math.round(deg / 22.5) % 16];
+};
+
 export const CurrentWeather = ({ currentWeather, location }) => {
   if (!currentWeather || !location) return null;
 
@@ -36,7 +42,7 @@ export const CurrentWeather = ({ currentWeather, location }) => {
           <Wind className="detail-icon" />
           <div className="detail-info">
             <span className="detail-label">Vietor: </span>
-            <span className="detail-value">{Math.round(currentWeather.wind_speed_10m)} km/h</span>
+            <span className="detail-value">{Math.round(currentWeather.wind_speed_10m)} km/h {windDirLabel(currentWeather.wind_direction_10m)}</span>
           </div>
         </div>
         <div className="glass detail-card">
