@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine
+  AreaChart, Area, BarChart, Bar, ComposedChart, Line, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine
 } from 'recharts';
 
 const CustomXAxisTick = ({ x, y, payload, activeTab, isMobile }) => {
@@ -210,6 +210,37 @@ export const WeatherCharts = ({ hourlyData, activeTab }) => {
               <YAxis stroke="var(--text-secondary)" fontSize={12} domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
               <Bar dataKey="cloudCover" fill="var(--chart-cloud)" radius={[2, 2, 0, 0]} name="Oblačnosť" />
             </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      { /* Wind */ }
+      <div className="glass chart-card">
+        <h3 className="chart-header">Vietor a nárazy vetra</h3>
+        <div style={{width: '100%', height: 250}}>
+          <ResponsiveContainer>
+            <ComposedChart data={hourlyData} margin={{ top: 10, right: 10, left: -20, bottom: 30 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+              {hourlyData.filter(d => d.isNewDay).map((d, index) => (
+                <ReferenceLine key={'ref-'+index} x={d.time} stroke="rgba(255,255,255,0.1)" strokeDasharray="3 3" />
+              ))}
+              <XAxis
+                dataKey="time"
+                ticks={chartTicks}
+                tick={<CustomXAxisTick activeTab={activeTab} isMobile={isMobile} />}
+                stroke="var(--text-secondary)"
+                fontSize={12}
+                tickMargin={10}
+                minTickGap={0}
+                interval={0}
+              />
+              <YAxis stroke="var(--text-secondary)" fontSize={12} tickFormatter={(value) => `${value}`} unit=" km/h" />
+              <Tooltip
+                content={<CustomTooltip firstPointTime={firstPointTime} labelFormatter={tooltipLabelFormatter} formatter={(v) => [`${v} km/h`]} />}
+              />
+              <Legend verticalAlign="top" height={36} />
+              <Bar dataKey="windGusts" fill="rgba(255,140,66,0.4)" radius={[3, 3, 0, 0]} name="Nárazy vetra" unit=" km/h" />
+              <Line type="monotone" dataKey="windSpeed" stroke="#4fc3f7" strokeWidth={2} dot={false} name="Sila vetra" unit=" km/h" />
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       </div>
