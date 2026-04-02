@@ -41,10 +41,12 @@ export const CurrentWeather = ({ currentWeather, location }) => {
         <div className="glass detail-card">
           <Wind className="detail-icon" />
           <div className="detail-info">
-            <span className="detail-label">Vietor: </span>
-            <span className="detail-value">{Math.round(currentWeather.wind_speed_10m)} km/h</span>
-            <div>
-              <span className="detail-label">Smer: </span>
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'baseline' }}>
+              <span className="detail-label">Vietor:</span>
+              <span className="detail-value">{Math.round(currentWeather.wind_speed_10m)} km/h</span>
+            </div>
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'baseline' }}>
+              <span className="detail-label">Smer:</span>
               <span className="detail-value">{windDirLabel(currentWeather.wind_direction_10m)}</span>
             </div>
           </div>
