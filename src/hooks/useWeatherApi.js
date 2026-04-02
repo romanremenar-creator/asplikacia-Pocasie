@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 
 export const DEFAULT_LOCATIONS = [
-  { name: 'Bratislava', lat: 48.1486, lon: 17.1077, elevation: 152 },
-  { name: 'Ostrý Grúň', lat: 48.5655, lon: 18.6617, elevation: 441 }
+  { name: 'Ostrý Grúň', lat: 48.5655, lon: 18.6617, elevation: 441 },
+  { name: 'Bratislava', lat: 48.1486, lon: 17.1077, elevation: 152 }
 ];
 
 export const useWeatherApi = (location) => {
