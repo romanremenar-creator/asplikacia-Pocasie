@@ -233,7 +233,7 @@ export const WeatherCharts = ({ hourlyData, activeTab }) => {
                 minTickGap={0}
                 interval={0}
               />
-              <YAxis stroke="var(--text-secondary)" fontSize={12} tickFormatter={(value) => `${value}`} unit=" km/h" />
+              <YAxis stroke="var(--text-secondary)" fontSize={12} tickFormatter={(value) => `${value} km/h`} width={60} />
               <Tooltip
                 content={<CustomTooltip firstPointTime={firstPointTime} labelFormatter={tooltipLabelFormatter} formatter={(v) => [`${v} km/h`]} />}
               />
