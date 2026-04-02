@@ -28,6 +28,8 @@ function App() {
         snowfall: data.hourly.snowfall[i],
         snowfall: data.hourly.snowfall[i],
         cloudCover: data.hourly.cloud_cover[i],
+        windSpeed: data.hourly.wind_speed_10m[i],
+        windGusts: data.hourly.wind_gusts_10m[i],
         isNewDay: date.getHours() === 0
       };
     });
