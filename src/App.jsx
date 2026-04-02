@@ -65,6 +65,7 @@ function App() {
               cloud_cover: data.current?.cloud_cover || data.hourly?.cloud_cover[0],
               precipitation: data.current?.precipitation || data.hourly?.precipitation[0],
               wind_speed_10m: data.current?.wind_speed_10m || data.hourly?.wind_speed_10m[0],
+              wind_direction_10m: data.current?.wind_direction_10m || data.hourly?.wind_direction_10m[0],
               relative_humidity_2m: data.current?.relative_humidity_2m || data.hourly?.relative_humidity_2m[0],
             }} 
           />
